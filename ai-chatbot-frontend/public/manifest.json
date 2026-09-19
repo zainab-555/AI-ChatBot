@@ -1,0 +1,8 @@
+{
+  "short_name": "AIChatBot",
+  "name": "Gemini AI ChatBot",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#070a13",
+  "background_color": "#070a13"
+}

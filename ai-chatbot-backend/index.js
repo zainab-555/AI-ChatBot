@@ -21,7 +21,6 @@ app.use(express.urlencoded({ limit: '25mb', extended: true }));
 const CANDIDATE_MODELS = [
   'gemini-2.5-flash',
   'gemini-2.0-flash',
-  'gemini-1.5-flash',
 ];
 
 // Direct REST call supporting multimodal (text + image/PDF) and AQ. key format

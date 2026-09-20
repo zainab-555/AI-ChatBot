@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export const Sidebar = ({
   isOpen,
@@ -11,8 +11,24 @@ export const Sidebar = ({
   user,
   onOpenAuth,
   onLogout,
+  onQuickAction,
+  activeMode,
+  onModeChange,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+
+  const modes = [
+    { key: 'Focus', icon: '✦', label: 'Focus' },
+    { key: 'Research', icon: '◌', label: 'Research' },
+    { key: 'Build', icon: '⚡', label: 'Build' },
+  ];
+
+  const quickActions = [
+    { key: 'Ask', icon: '✦', label: 'Ask', prompt: 'Give me a concise answer with the best next steps.' },
+    { key: 'Code', icon: '</>', label: 'Code', prompt: 'Write clean, production-ready code for this feature in JavaScript or React.' },
+    { key: 'Vision', icon: '◉', label: 'Vision', prompt: 'Analyze the image or context and explain what is happening in detail.' },
+    { key: 'Draft', icon: '✎', label: 'Draft', prompt: 'Draft a clear and professional response or plan for this task.' },
+  ];
 
   const filteredSessions = sessions.filter((s) =>
     (s.title || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -42,7 +58,13 @@ export const Sidebar = ({
                 </defs>
               </svg>
             </div>
-            <span className="sidebar-brand-name">Nexus AI</span>
+            <div className="sidebar-brand-copy">
+              <span className="sidebar-brand-name">Nexus AI</span>
+              <button type="button" className="brand-mode-toggle" title="AI mode">
+                <span className="brand-mode-dot" />
+                {activeMode || 'Focus'}
+              </button>
+            </div>
           </div>
 
           <button
@@ -53,6 +75,47 @@ export const Sidebar = ({
           >
             ✕
           </button>
+        </div>
+
+        <div className="ai-mode-panel">
+          <div className="ai-mode-panel-header">
+            <span>AI Switch</span>
+            <span className="ai-mode-live">Live</span>
+          </div>
+
+          <div className="ai-mode-grid">
+            {modes.map((mode) => (
+              <button
+                key={mode.key}
+                type="button"
+                className={`mode-option ${activeMode === mode.key ? 'selected' : ''}`}
+                onClick={() => onModeChange?.(mode.key)}
+              >
+                <span className="mode-option-icon">{mode.icon}</span>
+                <span className="mode-option-text">{mode.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="quick-actions-panel">
+          <div className="quick-actions-header">
+            <span>Quick Tools</span>
+          </div>
+          <div className="quick-actions-grid">
+            {quickActions.map((action) => (
+              <button
+                key={action.key}
+                type="button"
+                className="quick-action-btn"
+                title={action.label}
+                onClick={() => onQuickAction?.(action.prompt)}
+              >
+                <span className="quick-action-icon">{action.icon}</span>
+                <span>{action.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* + New Chat Button */}

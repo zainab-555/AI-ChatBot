@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import ChatHeader from './components/ChatHeader';
-import ChatMessage from './components/ChatMessage';
-import ChatInput from './components/ChatInput';
-import QuickPrompts from './components/QuickPrompts';
-import CameraModal from './components/CameraModal';
-import Sidebar from './components/Sidebar';
-import AuthModal from './components/AuthModal';
-import {
-  sendChatMessage,
-  fetchSessions,
-  fetchSessionMessages,
-  deleteSession,
-  checkServerHealth,
-} from './services/api';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
+import AuthModal from './components/AuthModal';
+import CameraModal from './components/CameraModal';
+import ChatHeader from './components/ChatHeader';
+import ChatInput from './components/ChatInput';
+import ChatMessage from './components/ChatMessage';
+import QuickPrompts from './components/QuickPrompts';
+import Sidebar from './components/Sidebar';
+import {
+    checkServerHealth,
+    deleteSession,
+    fetchSessionMessages,
+    fetchSessions,
+    sendChatMessage,
+} from './services/api';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -30,6 +30,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState('Build');
 
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -38,13 +39,32 @@ function App() {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior = 'smooth') => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    });
+  };
+
+  const handleMessagesScroll = () => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    shouldAutoScrollRef.current = distanceFromBottom < 120;
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (!shouldAutoScrollRef.current) return;
+
+    requestAnimationFrame(() => {
+      scrollToBottom('auto');
+    });
   }, [messages, isLoading, attachment]);
 
   // Load saved user from localStorage
@@ -250,6 +270,18 @@ function App() {
     }
   };
 
+  const handleQuickAction = (prompt) => {
+    if (!prompt) return;
+
+    const modeInstructions = {
+      Focus: 'Focus mode: answer clearly, concisely, and prioritize the most useful next step. ',
+      Research: 'Research mode: explain the context, compare options, and give evidence-based reasoning. ',
+      Build: 'Build mode: produce practical implementation steps, code-ready guidance, and a clear action plan. ',
+    };
+
+    handleSendMessage(`${modeInstructions[activeMode] || ''}${prompt}`);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('gemini_user_profile');
     setUser(null);
@@ -288,6 +320,9 @@ function App() {
           user={user}
           onOpenAuth={() => setIsAuthModalOpen(true)}
           onLogout={handleLogout}
+          onQuickAction={handleQuickAction}
+          activeMode={activeMode}
+          onModeChange={setActiveMode}
         />
 
         {/* Main Chat Interface */}
@@ -313,7 +348,11 @@ function App() {
             </div>
           )}
 
-          <main className="chat-messages-area" ref={chatContainerRef}>
+          <main
+            className="chat-messages-area"
+            ref={chatContainerRef}
+            onScroll={handleMessagesScroll}
+          >
             {messages.length === 0 ? (
               <QuickPrompts onSelectPrompt={(prompt) => handleSendMessage(prompt)} />
             ) : (

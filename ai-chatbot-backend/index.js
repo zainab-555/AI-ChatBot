@@ -17,12 +17,11 @@ app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
-// Preferred models recommended by Google
+// Fastest and most stable Gemini Flash family first to reduce waiting time.
 const CANDIDATE_MODELS = [
-  'gemini-3.6-flash',
-  'gemini-3.7-flash',
-  'gemini-3.8-flash',
-  'gemini-flash-latest',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
 ];
 
 // Direct REST call supporting multimodal (text + image/PDF) and AQ. key format
@@ -45,6 +44,7 @@ const callGeminiRest = async (apiKey, modelName, apiVersion, prompt, attachment)
       'Content-Type': 'application/json',
       'x-goog-api-key': apiKey,
     },
+    signal: AbortSignal.timeout(20000),
     body: JSON.stringify({
       contents: [{ parts }],
     }),
@@ -73,37 +73,35 @@ const generateWithGemini = async (prompt, attachment) => {
   let lastError = null;
 
   for (const modelName of CANDIDATE_MODELS) {
-    for (const apiVersion of ['v1beta', 'v1']) {
-      // 1. Try SDK
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName }, { apiVersion });
-        const contentParts = [prompt];
-        if (attachment && attachment.base64 && attachment.mimeType) {
-          contentParts.push({
-            inlineData: {
-              data: attachment.base64,
-              mimeType: attachment.mimeType,
-            },
-          });
-        }
-
-        const result = await model.generateContent(contentParts);
-        const response = await result.response;
-        const text = response.text();
-        console.log(`[Gemini SDK] Success using ${modelName} (${apiVersion})`);
-        return { text, modelName };
-      } catch (sdkErr) {
-        lastError = sdkErr;
+    // Try SDK first for the fastest successful path.
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const contentParts = [prompt];
+      if (attachment && attachment.base64 && attachment.mimeType) {
+        contentParts.push({
+          inlineData: {
+            data: attachment.base64,
+            mimeType: attachment.mimeType,
+          },
+        });
       }
 
-      // 2. Try REST fallback
-      try {
-        const text = await callGeminiRest(apiKey, modelName, apiVersion, prompt, attachment);
-        console.log(`[Gemini REST] Success using ${modelName} (${apiVersion})`);
-        return { text, modelName };
-      } catch (restErr) {
-        lastError = restErr;
-      }
+      const result = await model.generateContent(contentParts);
+      const response = await result.response;
+      const text = response.text();
+      console.log(`[Gemini SDK] Success using ${modelName}`);
+      return { text, modelName };
+    } catch (sdkErr) {
+      lastError = sdkErr;
+    }
+
+    // Use REST fallback only once per model to keep it fast.
+    try {
+      const text = await callGeminiRest(apiKey, modelName, 'v1beta', prompt, attachment);
+      console.log(`[Gemini REST] Success using ${modelName}`);
+      return { text, modelName };
+    } catch (restErr) {
+      lastError = restErr;
     }
   }
 

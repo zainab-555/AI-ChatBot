@@ -1,1 +1,22 @@
+# project folders
 /client
+
+# dependencies
+node_modules/
+ai-chatbot-backend/node_modules/
+ai-chatbot-frontend/node_modules/
+
+# environment files
+.env
+.env.*
+ai-chatbot-backend/.env
+ai-chatbot-frontend/.env
+
+# build outputs
+build/
+dist/
+coverage/
+ai-chatbot-frontend/build/
+
+# logs
+*.log

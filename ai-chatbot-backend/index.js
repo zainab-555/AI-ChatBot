@@ -17,10 +17,14 @@ app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
-// Fastest and most stable Gemini Flash family first to reduce waiting time.
+// Candidate models supporting current Gemini API versions (with optional env override)
 const CANDIDATE_MODELS = [
+  ...(process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL.trim()] : []),
   'gemini-2.5-flash',
-  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-pro',
+  'gemini-2.5-pro',
 ];
 
 // Direct REST call supporting multimodal (text + image/PDF) and AQ. key format
@@ -91,6 +95,7 @@ const generateWithGemini = async (prompt, attachment) => {
       console.log(`[Gemini SDK] Success using ${modelName}`);
       return { text, modelName };
     } catch (sdkErr) {
+      console.warn(`[Gemini SDK] ${modelName} attempt failed:`, sdkErr.message);
       lastError = sdkErr;
     }
 
@@ -100,6 +105,7 @@ const generateWithGemini = async (prompt, attachment) => {
       console.log(`[Gemini REST] Success using ${modelName}`);
       return { text, modelName };
     } catch (restErr) {
+      console.warn(`[Gemini REST] ${modelName} attempt failed:`, restErr.message);
       lastError = restErr;
     }
   }

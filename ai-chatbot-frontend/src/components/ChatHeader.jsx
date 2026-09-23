@@ -63,7 +63,7 @@ export const ChatHeader = ({
           <div className="header-info">
             <div className="header-title-row">
               <h1 className="header-title">Nexus AI</h1>
-              <span className="model-badge">gemini-3.6-flash</span>
+              <span className="model-badge">gemini-1.5-flash</span>
             </div>
             <p className="header-subtitle">
               {activeSessionTitle ? (

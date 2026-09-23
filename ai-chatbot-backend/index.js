@@ -20,11 +20,8 @@ app.use(express.urlencoded({ limit: '25mb', extended: true }));
 // Candidate models supporting current Gemini API versions (with optional env override)
 const CANDIDATE_MODELS = [
   ...(process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL.trim()] : []),
-  'gemini-2.5-flash',
   'gemini-1.5-flash',
-  'gemini-1.5-flash-latest',
   'gemini-1.5-pro',
-  'gemini-2.5-pro',
 ];
 
 // Direct REST call supporting multimodal (text + image/PDF) and AQ. key format

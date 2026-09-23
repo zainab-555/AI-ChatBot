@@ -50,7 +50,7 @@ export const AuthModal = ({ isOpen, onClose, onLogin }) => {
         </div>
 
         <p className="auth-description">
-          Save your conversation history, customize your AI preferences, and access Gemini 1.5 Flash.
+          Save your conversation history, customize your AI preferences, and access Gemini 3.6 Flash.
         </p>
 
         <form onSubmit={handleSubmit} className="auth-form">

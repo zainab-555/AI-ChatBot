@@ -181,7 +181,7 @@ export const ChatInput = ({
       </div>
 
       <div className="input-footer-hint">
-        <span>Supports Camera, Photos (JPG/PNG) & PDFs. Powered by Google Gemini 1.5 Flash.</span>
+        <span>Supports Camera, Photos (JPG/PNG) & PDFs. Powered by Google Gemini 3.6 Flash.</span>
       </div>
     </div>
   );

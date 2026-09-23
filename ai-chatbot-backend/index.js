@@ -20,6 +20,7 @@ app.use(express.urlencoded({ limit: '25mb', extended: true }));
 // Candidate models supporting current Gemini API versions (with optional env override)
 const CANDIDATE_MODELS = [
   ...(process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL.trim()] : []),
+  'gemini-3.6-flash',
   'gemini-1.5-flash',
   'gemini-2.5-flash',
 ];

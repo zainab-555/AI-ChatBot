@@ -163,7 +163,7 @@ export const ChatMessage = ({ message }) => {
 
       <div className={`message-bubble ${isBot ? 'bot-bubble' : 'user-bubble'} ${message.isError ? 'error-bubble' : ''}`}>
         <div className="message-header-meta">
-          <span className="sender-name">{isBot ? 'Gemini 1.5 Flash' : 'You'}</span>
+          <span className="sender-name">{isBot ? 'Gemini 3.6 Flash' : 'You'}</span>
           {formattedTime && <span className="message-time">{formattedTime}</span>}
         </div>
 

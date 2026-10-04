@@ -251,7 +251,7 @@ function App() {
       const errorBotMessage = {
         id: `err-${Date.now()}`,
         sender: 'bot',
-        text: `⚠️ **Error**: ${err.message}\n\nPlease verify that your Node.js Express server is running on \`http://localhost:5000\` and that \`GEMINI_API_KEY\` is configured in your \`.env\` file.`,
+        text: `⚠️ **Connection Issue**: ${err.message}\n\n*Tip*: If this is the first request after a while, the cloud server on Render free tier takes ~30–50 seconds to wake up. Please wait a moment and try sending again!`,
         timestamp: new Date().toISOString(),
         isError: true,
       };
@@ -340,10 +340,9 @@ function App() {
 
           {!isConnected && (
             <div className="offline-banner">
-              <span className="offline-icon">⚠️</span>
+              <span className="offline-icon">⏳</span>
               <span>
-                Backend server not detected on <code>http://localhost:5000</code>. Please run{' '}
-                <code>npm start</code> in <code>ai-chatbot-backend</code>.
+                Connecting to cloud backend... (Render Free Tier automatically sleeps when inactive; please allow ~30–50s to wake up).
               </span>
             </div>
           )}

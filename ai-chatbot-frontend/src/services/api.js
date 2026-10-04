@@ -33,7 +33,7 @@ export const sendChatMessage = async (prompt, attachment = null, sessionId = nul
       throw new Error(serverError || `Server returned error ${error.response.status}`);
     } else if (error.request) {
       throw new Error(
-        'Could not connect to backend server. Make sure your Express server is running on http://localhost:5000'
+        'Could not reach backend server. If using Render free tier, it may take 30–50 seconds to wake up. Please retry shortly.'
       );
     } else {
       throw new Error(error.message || 'An unexpected error occurred while sending message.');
@@ -91,7 +91,7 @@ export const deleteSession = async (sessionId) => {
  */
 export const checkServerHealth = async () => {
   try {
-    const res = await apiClient.get('/api/health', { timeout: 3000 });
+    const res = await apiClient.get('/api/health', { timeout: 12000 });
     return res.status === 200;
   } catch (err) {
     return false;

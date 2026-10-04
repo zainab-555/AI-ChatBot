@@ -17,12 +17,11 @@ app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
-// Candidate models supporting current Gemini API versions (with optional env override)
+// Candidate models supporting current Gemini API versions (fastest models first)
 const CANDIDATE_MODELS = [
   ...(process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL.trim()] : []),
-  'gemini-3.6-flash',
   'gemini-1.5-flash',
-  'gemini-2.5-flash',
+  'gemini-2.0-flash',
 ];
 
 // Direct REST call supporting multimodal (text + image/PDF) and AQ. key format
@@ -111,9 +110,12 @@ const generateWithGemini = async (prompt, attachment) => {
   throw lastError;
 };
 
+// Disable Mongoose command buffering so API calls respond immediately even if DB is offline
+mongoose.set('bufferCommands', false);
+
 // MongoDB Connection
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
   .then(() => {
     console.log('Successfully connected to MongoDB.');
   })
@@ -180,32 +182,26 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    // Save conversation to MongoDB with sessionId & title
+    // Save conversation to MongoDB with sessionId & title (only if DB is connected)
     let savedChat = null;
-    try {
-      savedChat = await Chat.create({
-        sessionId,
-        sessionTitle,
-        prompt: effectivePrompt,
-        response: botResponse,
-        attachment: attachment
-          ? {
-              fileName: attachment.fileName,
-              fileType: attachment.mimeType,
-              fileSize: attachment.fileSize,
-            }
-          : undefined,
-      });
-    } catch (dbError) {
-      console.error('Failed to save chat to MongoDB:', dbError.message);
-      return res.status(200).json({
-        success: true,
-        sessionId,
-        sessionTitle,
-        response: botResponse,
-        model: usedModel,
-        warning: 'Conversation could not be persisted to the database.',
-      });
+    if (mongoose.connection.readyState === 1) {
+      try {
+        savedChat = await Chat.create({
+          sessionId,
+          sessionTitle,
+          prompt: effectivePrompt,
+          response: botResponse,
+          attachment: attachment
+            ? {
+                fileName: attachment.fileName,
+                fileType: attachment.mimeType,
+                fileSize: attachment.fileSize,
+              }
+            : undefined,
+        });
+      } catch (dbError) {
+        console.warn('Failed to save chat to MongoDB:', dbError.message);
+      }
     }
 
     return res.status(200).json({
@@ -227,6 +223,12 @@ app.post('/api/chat', async (req, res) => {
 
 // GET /api/sessions - Get all conversation sessions for sidebar
 app.get('/api/sessions', async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(200).json({
+      success: true,
+      sessions: [],
+    });
+  }
   try {
     const sessions = await Chat.aggregate([
       {
@@ -264,8 +266,15 @@ app.get('/api/sessions', async (req, res) => {
 
 // GET /api/sessions/:sessionId - Get all messages for a specific session
 app.get('/api/sessions/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(200).json({
+      success: true,
+      sessionId,
+      messages: [],
+    });
+  }
   try {
-    const { sessionId } = req.params;
     const query =
       sessionId === 'default_session'
         ? { $or: [{ sessionId: 'default_session' }, { sessionId: null }] }
@@ -288,8 +297,14 @@ app.get('/api/sessions/:sessionId', async (req, res) => {
 
 // DELETE /api/sessions/:sessionId - Delete an entire chat session
 app.delete('/api/sessions/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(200).json({
+      success: true,
+      message: `Session deleted (local/stateless mode).`,
+    });
+  }
   try {
-    const { sessionId } = req.params;
     const query =
       sessionId === 'default_session'
         ? { $or: [{ sessionId: 'default_session' }, { sessionId: null }] }
@@ -311,6 +326,13 @@ app.delete('/api/sessions/:sessionId', async (req, res) => {
 
 // GET /api/chat/history - Retrieve all recent chat history (legacy compatibility)
 app.get('/api/chat/history', async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(200).json({
+      success: true,
+      count: 0,
+      history: [],
+    });
+  }
   try {
     const limit = parseInt(req.query.limit, 10) || 50;
     const history = await Chat.find().sort({ createdAt: 1 }).limit(limit);

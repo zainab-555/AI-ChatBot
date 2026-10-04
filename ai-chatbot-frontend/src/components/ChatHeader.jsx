@@ -63,15 +63,15 @@ export const ChatHeader = ({
           <div className="header-info">
             <div className="header-title-row">
               <h1 className="header-title">Nexus AI</h1>
-              <span className="model-badge">gemini-3.6-flash</span>
+              <span className="model-badge">gemini-1.5-flash</span>
             </div>
             <p className="header-subtitle">
               {activeSessionTitle ? (
                 <span className="active-chat-title">{activeSessionTitle}</span>
               ) : isConnected ? (
-                <span className="status-text-online">Backend Connected • Port 5000</span>
+                <span className="status-text-online">Backend Online • Cloud Ready</span>
               ) : (
-                <span className="status-text-offline">Backend Offline (check port 5000)</span>
+                <span className="status-text-offline">Backend Waking Up / Connecting...</span>
               )}
             </p>
           </div>

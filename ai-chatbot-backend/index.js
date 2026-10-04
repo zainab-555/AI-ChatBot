@@ -17,13 +17,14 @@ app.use(cors());
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
-// Candidate models supporting current Gemini API versions (fastest models first)
+// Candidate models verified against Google Gemini API list (active live models)
 const CANDIDATE_MODELS = [
   ...(process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL.trim()] : []),
   'gemini-3.8-flash',
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
+  'gemini-flash-latest',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash',
+  'gemini-flash-lite-latest',
 ];
 
 // Direct REST call supporting multimodal (text + image/PDF) and AQ. key format
